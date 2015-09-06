@@ -41,9 +41,9 @@ impl<T> SearchGoal<T> for T where T: PartialEq {
 pub trait SearchSpace {
     type State: Hash;
     type Action;
-    type Iterator: Iterator<Item=(Self::Action, Self::State)>;
 
-    fn expand(&self, state: &Self::State) -> Self::Iterator;
+    fn expand(&self, state: &Self::State)
+    -> Box<Iterator<Item=(Self::Action, Self::State)>>;
 
     fn dfs<G>(&self, start: Self::State, goal: G) -> Option<Vec<Self::Action>>
     where G: SearchGoal<Self::State> {
@@ -93,31 +93,27 @@ pub trait SearchSpace {
 
 #[cfg(test)]
 pub mod tests {
-    use std::vec::IntoIter;
     use super::SearchSpace;
 
     #[test]
     pub fn test_dfs() {
-        struct TestSearch;
-
         #[derive(Debug, PartialEq)]
         enum Dir { Left, Right }
+
+        struct TestSearch;
 
         impl SearchSpace for TestSearch {
             type State = i32;
             type Action = Dir;
-            type Iterator = IntoIter<(Self::Action, Self::State)>;
 
-            fn expand(&self, state: &Self::State) -> Self::Iterator {
-                if *state == 0 {
-                    vec![(Dir::Left, 1), (Dir::Right, 2)].into_iter()
-                } else if *state == 1 {
-                    vec![(Dir::Left, 3), (Dir::Right, 4)].into_iter()
-                } else if *state == 2 {
-                    vec![(Dir::Left, 2)].into_iter()
-                } else {
-                    vec![].into_iter()
-                }
+            fn expand(&self, state: &Self::State)
+            -> Box<Iterator<Item=(Self::Action, Self::State)>> {
+                Box::new(match *state {
+                    0 => vec![(Dir::Left, 1), (Dir::Right, 2)],
+                    1 => vec![(Dir::Left, 3), (Dir::Right, 4)],
+                    2 => vec![(Dir::Left, 2)],
+                    _ => vec![],
+                }.into_iter())
             }
         }
 
