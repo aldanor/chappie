@@ -1,5 +1,6 @@
-use std::hash::{Hash, Hasher, SipHasher};
+use std::iter::Iterator;
 use std::collections::HashSet;
+use std::hash::{Hash, Hasher, SipHasher};
 
 pub trait SearchSpace {
     type State: Hash;
