@@ -1,4 +1,4 @@
-use std::hash::Hash;
+use std::hash::{Hash, Hasher, SipHasher};
 use std::collections::HashSet;
 
 pub trait SearchSpace {
@@ -16,6 +16,7 @@ where S: SearchSpace {
     let mut path = Vec::new();
     let actions = space.actions(&start);
     let mut frontier = vec![(start, actions)];
+    let mut visited = HashSet::new();
 
     loop {
         let result = match frontier.last_mut() {
@@ -28,6 +29,15 @@ where S: SearchSpace {
                     None => None,
                     Some(action) => {
                         let next_state = space.next_state(&state, &action);
+
+                        let mut hasher = SipHasher::new();
+                        next_state.hash(&mut hasher);
+                        let hash = hasher.finish();
+                        if visited.contains(&hash) {
+                            continue;
+                        }
+                        visited.insert(hash);
+
                         let next_actions = space.actions(&next_state);
                         path.push(action);
                         Some((next_state, next_actions))
@@ -72,7 +82,10 @@ pub mod tests {
             fn actions(&self, state: &i32) -> Self::Iterator {
                 if *state == 0 || *state == 1 {
                     vec![Direction::Left, Direction::Right].into_iter()
-                } else {
+                } else if *state == 2 {
+                    vec![Direction::Left].into_iter()
+                }
+                else {
                     vec![].into_iter()
                 }
             }
@@ -87,6 +100,7 @@ pub mod tests {
                         Direction::Left => 3,
                         Direction::Right => 4,
                     },
+                    2 => 2,
                     node => node
                 }
             }
@@ -109,6 +123,7 @@ pub mod tests {
         assert_eq!(S::solve(0, 3).unwrap(), vec![Direction::Left, Direction::Left]);
         assert_eq!(S::solve(0, 4).unwrap(), vec![Direction::Left, Direction::Right]);
         assert_eq!(S::solve(2, 2).unwrap(), vec![]);
+        assert!(S::solve(2, 0).is_none());
         assert!(S::solve(5, 0).is_none());
     }
 }
