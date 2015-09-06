@@ -1,5 +1,6 @@
 use std::iter::Iterator;
 use std::collections::HashSet;
+use std::marker::PhantomData;
 use std::hash::{Hash, Hasher, SipHasher};
 
 pub trait SearchSpace {
@@ -11,6 +12,31 @@ pub trait SearchSpace {
     fn is_goal(&self, state: &Self::State) -> bool;
 }
 
+struct HashTracker<T> {
+    hash_set: HashSet<u64>,
+    phantom: PhantomData<T>,
+}
+
+impl<T> HashTracker<T> where T: Hash {
+    fn new() -> HashTracker<T> {
+        HashTracker {
+            hash_set: HashSet::new(),
+            phantom: PhantomData
+        }
+    }
+
+    fn contains(&mut self, item: &T) -> bool {
+        let mut hasher = SipHasher::new();
+        item.hash(&mut hasher);
+        let hash = hasher.finish();
+        let contains = self.hash_set.contains(&hash);
+        if !contains {
+            self.hash_set.insert(hash);
+        }
+        contains
+    }
+}
+
 pub fn depth_first_search<S>(space: &S, start: S::State) -> Option<Vec<S::Action>>
 where S: SearchSpace {
     if space.is_goal(&start) {
@@ -18,12 +44,14 @@ where S: SearchSpace {
     }
 
     let mut path = Vec::new();
-    let mut visited = HashSet::new();
+    let mut visited = HashTracker::new();
     let mut frontier = vec![space.expand(&start)];
 
     loop {
         let result = match frontier.last_mut() {
-            None => return None,
+            None => {
+                return None
+            },
             Some(&mut ref mut iter) => {
                 match iter.next() {
                     None => {
@@ -31,14 +59,9 @@ where S: SearchSpace {
                         None
                     },
                     Some((action, state)) => {
-                        let mut hasher = SipHasher::new();
-                        state.hash(&mut hasher);
-                        let hash = hasher.finish();
-                        if visited.contains(&hash) {
+                        if visited.contains(&state) {
                             continue;
                         }
-                        visited.insert(hash);
-
                         path.push(action);
                         if space.is_goal(&state) {
                             return Some(path);
