@@ -2,7 +2,7 @@ use std::hash::{Hash, Hasher, SipHasher};
 use std::collections::HashSet;
 
 pub trait SearchSpace {
-    type State: Ord + Hash + Eq;
+    type State: Hash;
     type Action;
     type Iterator: Iterator<Item=Self::Action>;
 
