@@ -1,10 +1,9 @@
-use std::fmt::Debug;
 use std::hash::Hash;
 use std::collections::HashSet;
 
 pub trait SearchSpace {
-    type State: Ord + Hash + Eq + Clone + Debug;
-    type Action: Clone;
+    type State: Ord + Hash + Eq;
+    type Action;
     type Iterator: Iterator<Item=Self::Action>;
 
     fn actions(&self, state: &Self::State) -> Self::Iterator;
