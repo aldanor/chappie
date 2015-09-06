@@ -1,4 +1,8 @@
 [package]
 name = "chappie"
 version = "0.1.0"
+keywords = ["chappie", "search"]
 authors = ["Ivan Smirnov <i.s.smirnov@gmail.com>"]
+description = "Search algorithms in Rust."
+repository = "https://github.com/aldanor/chappie"
+homepage = "https://github.com/aldanor/chappie"
