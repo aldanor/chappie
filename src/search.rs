@@ -5,8 +5,9 @@ use std::collections::HashSet;
 pub trait SearchSpace {
     type State: Ord + Hash + Eq + Clone + Debug;
     type Action: Clone;
+    type Iterator: Iterator<Item=Self::Action>;
 
-    fn actions(&self, state: &Self::State) -> Vec<Self::Action>;
+    fn actions(&self, state: &Self::State) -> Self::Iterator;
     fn next_state(&self, state: &Self::State, action: &Self::Action) -> Self::State;
     fn is_goal(&self, state: &Self::State) -> bool;
 }
@@ -14,8 +15,8 @@ pub trait SearchSpace {
 pub fn depth_first_search<S>(space: &S, start: S::State) -> Option<Vec<S::Action>>
 where S: SearchSpace {
     let mut path = Vec::new();
-    let start_actions = space.actions(&start);
-    let mut frontier = vec![(start, start_actions.into_iter())];
+    let actions = space.actions(&start);
+    let mut frontier = vec![(start, actions)];
 
     loop {
         let result = match frontier.last_mut() {
@@ -28,7 +29,7 @@ where S: SearchSpace {
                     None => None,
                     Some(action) => {
                         let next_state = space.next_state(&state, &action);
-                        let next_actions = space.actions(&next_state).into_iter();
+                        let next_actions = space.actions(&next_state);
                         path.push(action);
                         Some((next_state, next_actions))
                     }
@@ -49,6 +50,7 @@ where S: SearchSpace {
 
 #[cfg(test)]
 pub mod tests {
+    use std::vec::IntoIter;
     use super::*;
 
     #[test]
@@ -66,12 +68,13 @@ pub mod tests {
         impl SearchSpace for S {
             type State = i32;
             type Action = Direction;
+            type Iterator = IntoIter<Self::Action>;
 
-            fn actions(&self, state: &i32) -> Vec<Direction> {
+            fn actions(&self, state: &i32) -> Self::Iterator {
                 if *state == 0 || *state == 1 {
-                    vec![Direction::Left, Direction::Right]
+                    vec![Direction::Left, Direction::Right].into_iter()
                 } else {
-                    vec![]
+                    vec![].into_iter()
                 }
             }
 
