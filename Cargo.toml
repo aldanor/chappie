@@ -6,3 +6,6 @@ authors = ["Ivan Smirnov <i.s.smirnov@gmail.com>"]
 description = "Search algorithms in Rust."
 repository = "https://github.com/aldanor/chappie"
 homepage = "https://github.com/aldanor/chappie"
+
+[dependencies]
+fnv = "*"

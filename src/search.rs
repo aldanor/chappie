@@ -1,7 +1,8 @@
 use std::iter::Iterator;
 use std::collections::HashSet;
 use std::marker::PhantomData;
-use std::hash::{Hash, Hasher, SipHasher};
+use std::hash::{Hash, Hasher};
+use fnv::FnvHasher;
 
 struct Visited<T> {
     hash_set: HashSet<u64>,
@@ -17,7 +18,7 @@ impl<T> Visited<T> where T: Hash {
     }
 
     fn insert(&mut self, value: &T) -> bool {
-        let mut hasher = SipHasher::new();
+        let mut hasher = FnvHasher::default();
         value.hash(&mut hasher);
         self.hash_set.insert(hasher.finish())
     }
