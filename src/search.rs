@@ -1,26 +1,20 @@
 use std::iter::Iterator;
 use std::collections::HashSet;
-use std::marker::PhantomData;
-use std::hash::{Hash, Hasher};
-use fnv::FnvHasher;
+use std::hash::Hash;
 
 struct Visited<T> {
-    hash_set: HashSet<u64>,
-    phantom: PhantomData<T>,
+    hash_set: HashSet<T>
 }
 
-impl<T> Visited<T> where T: Hash {
+impl<T> Visited<T> where T: Hash + Clone + Eq {
     fn new() -> Visited<T> {
         Visited {
-            hash_set: HashSet::new(),
-            phantom: PhantomData,
+            hash_set: HashSet::new()
         }
     }
 
     fn insert(&mut self, value: &T) -> bool {
-        let mut hasher = FnvHasher::default();
-        value.hash(&mut hasher);
-        self.hash_set.insert(hasher.finish())
+        self.hash_set.insert(value.clone())
     }
 }
 
@@ -35,7 +29,7 @@ impl<T> SearchGoal<T> for T where T: PartialEq {
 }
 
 pub trait SearchSpace {
-    type State: Hash;
+    type State: Hash + Clone + Eq;
     type Action;
     type Iterator: Iterator<Item=(Self::Action, Self::State)>;
 
