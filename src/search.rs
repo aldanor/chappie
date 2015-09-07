@@ -3,28 +3,23 @@ use std::collections::HashSet;
 use std::marker::PhantomData;
 use std::hash::{Hash, Hasher, SipHasher};
 
-struct HashTracker<T> {
+struct Visited<T> {
     hash_set: HashSet<u64>,
     phantom: PhantomData<T>,
 }
 
-impl<T> HashTracker<T> where T: Hash {
-    fn new() -> HashTracker<T> {
-        HashTracker {
+impl<T> Visited<T> where T: Hash {
+    fn new() -> Visited<T> {
+        Visited {
             hash_set: HashSet::new(),
-            phantom: PhantomData
+            phantom: PhantomData,
         }
     }
 
-    fn contains(&mut self, item: &T) -> bool {
+    fn insert(&mut self, value: &T) -> bool {
         let mut hasher = SipHasher::new();
-        item.hash(&mut hasher);
-        let hash = hasher.finish();
-        let contains = self.hash_set.contains(&hash);
-        if !contains {
-            self.hash_set.insert(hash);
-        }
-        contains
+        value.hash(&mut hasher);
+        self.hash_set.insert(hasher.finish())
     }
 }
 
@@ -52,7 +47,7 @@ pub trait SearchSpace {
         }
 
         let mut path = Vec::new();
-        let mut visited = HashTracker::new();
+        let mut visited = Visited::new();
         let mut frontier = vec![self.expand(&start)];
 
         loop {
@@ -67,7 +62,7 @@ pub trait SearchSpace {
                             None
                         },
                         Some((action, state)) => {
-                            if visited.contains(&state) {
+                            if !visited.insert(&state) {
                                 continue;
                             }
                             path.push(action);
