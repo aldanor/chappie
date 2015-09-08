@@ -42,8 +42,7 @@ pub trait SearchSpace {
         }
 
         let mut visited = Visited::new();
-        let mut stack: Vec<(Self::Iterator, Option<Self::Action>)> = vec![];
-        stack.push((self.expand(&start), None));
+        let mut stack = vec![(self.expand(&start), None)];
 
         loop {
             let next = match stack.last_mut() {
