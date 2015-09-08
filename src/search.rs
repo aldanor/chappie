@@ -30,7 +30,7 @@ impl<T> SearchGoal<T> for T where T: PartialEq {
 
 pub trait SearchSpace {
     type State: Hash + Clone + Eq;
-    type Action;
+    type Action: Clone;
     type Iterator: Iterator<Item=(Self::Action, Self::State)>;
 
     fn expand(&self, state: &Self::State) -> Self::Iterator;
@@ -41,42 +41,33 @@ pub trait SearchSpace {
             return Some(vec![]);
         }
 
-        let mut path = Vec::new();
         let mut visited = Visited::new();
-        let mut frontier = vec![self.expand(&start)];
+        let mut stack: Vec<(Self::Iterator, Option<Self::Action>)> = vec![];
+        stack.push((self.expand(&start), None));
 
         loop {
-            let result = match frontier.last_mut() {
-                None => {
-                    return None
-                },
-                Some(&mut ref mut iter) => {
-                    match iter.next() {
-                        None => {
-                            path.pop();
-                            None
-                        },
-                        Some((action, state)) => {
-                            if !visited.insert(&state) {
-                                continue;
-                            }
-                            path.push(action);
-                            if goal.is_goal(&state) {
-                                return Some(path);
-                            }
-                            Some(self.expand(&state))
-                        }
-                    }
-                }
+            let next = match stack.last_mut() {
+                None => return None,
+                Some(&mut (ref mut iter, _)) => iter.next()
             };
-            match result {
-                None => {
-                    frontier.pop();
+            if let Some((action, state)) = next {
+                if !visited.insert(&state) {
+                    continue;
                 }
-                Some(iter) => {
-                    frontier.push(iter);
+                if goal.is_goal(&state) {
+                    return Some(
+                        stack.iter()
+                             .map(|&(_, ref a)| a)
+                             .cloned()
+                             .filter_map(|x| x)
+                             .chain(Some(action).into_iter())
+                             .collect()
+                    )
                 }
-            };
+                stack.push((self.expand(&state), Some(action)));
+            } else {
+                stack.pop();
+            }
         }
     }
 }
@@ -90,7 +81,7 @@ pub mod tests {
     pub fn test_dfs() {
         struct TestSearch;
 
-        #[derive(Debug, PartialEq)]
+        #[derive(Debug, PartialEq, Clone)]
         enum Dir { Left, Right }
 
         impl SearchSpace for TestSearch {
