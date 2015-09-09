@@ -78,7 +78,7 @@ pub mod tests {
     pub fn test_dfs() {
         struct TestSearch;
 
-        #[derive(Debug, PartialEq, Clone)]
+        #[derive(Debug, PartialEq)]
         enum Dir { Left, Right }
 
         impl SearchSpace for TestSearch {
