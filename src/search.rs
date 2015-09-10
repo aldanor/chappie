@@ -41,42 +41,30 @@ pub trait SearchSpace {
             return Some(vec![]);
         }
 
-        let mut path = Vec::new();
         let mut visited = Visited::new();
-        let mut frontier = vec![self.expand(&start)];
+        let mut stack = vec![(self.expand(&start), None)];
 
         loop {
-            let result = match frontier.last_mut() {
-                None => {
-                    return None
-                },
-                Some(&mut ref mut iter) => {
-                    match iter.next() {
-                        None => {
-                            path.pop();
-                            None
-                        },
-                        Some((action, state)) => {
-                            if !visited.insert(&state) {
-                                continue;
-                            }
-                            path.push(action);
-                            if goal.is_goal(&state) {
-                                return Some(path);
-                            }
-                            Some(self.expand(&state))
-                        }
-                    }
-                }
+            let next = match stack.last_mut() {
+                None => return None,
+                Some(&mut (ref mut iter, _)) => iter.next()
             };
-            match result {
-                None => {
-                    frontier.pop();
+            if let Some((action, state)) = next {
+                if !visited.insert(&state) {
+                    continue;
                 }
-                Some(iter) => {
-                    frontier.push(iter);
+                if goal.is_goal(&state) {
+                    return Some(
+                        stack.into_iter()
+                             .filter_map(|(_, a)| a)
+                             .chain(Some(action).into_iter())
+                             .collect()
+                    )
                 }
-            };
+                stack.push((self.expand(&state), Some(action)));
+            } else {
+                stack.pop();
+            }
         }
     }
 }
