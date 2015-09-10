@@ -30,7 +30,7 @@ impl<T> SearchGoal<T> for T where T: PartialEq {
 
 pub trait SearchSpace {
     type State: Hash + Clone + Eq;
-    type Action: Clone;
+    type Action;
     type Iterator: Iterator<Item=(Self::Action, Self::State)>;
 
     fn expand(&self, state: &Self::State) -> Self::Iterator;
@@ -55,10 +55,8 @@ pub trait SearchSpace {
                 }
                 if goal.is_goal(&state) {
                     return Some(
-                        stack.iter()
-                             .map(|&(_, ref a)| a)
-                             .cloned()
-                             .filter_map(|x| x)
+                        stack.into_iter()
+                             .filter_map(|(_, a)| a)
                              .chain(Some(action).into_iter())
                              .collect()
                     )
@@ -80,7 +78,7 @@ pub mod tests {
     pub fn test_dfs() {
         struct TestSearch;
 
-        #[derive(Debug, PartialEq, Clone)]
+        #[derive(Debug, PartialEq)]
         enum Dir { Left, Right }
 
         impl SearchSpace for TestSearch {

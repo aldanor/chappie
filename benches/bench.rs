@@ -7,7 +7,6 @@ use chappie::search::SearchSpace;
 use test::{Bencher, black_box};
 use std::vec::IntoIter;
 
-#[derive(Clone)]
 enum Dir { Left, Right}
 
 struct BinaryTree;
