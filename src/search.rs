@@ -72,6 +72,9 @@ pub trait SearchSpace {
 #[cfg(test)]
 pub mod tests {
     use std::vec::IntoIter;
+    use std::fmt;
+    use rand::chacha::ChaChaRng;
+    use rand::Rng;
     use super::SearchSpace;
 
     #[test]
@@ -106,5 +109,74 @@ pub mod tests {
         assert_eq!(ts.dfs(2, 2).unwrap(), vec![]);
         assert!(ts.dfs(2, 0).is_none());
         assert!(ts.dfs(5, 0).is_none());
+    }
+
+    #[test]
+    pub fn test_dfs_random() {
+        struct RandomTree {
+            nodes: Vec<Vec<usize>>
+        };
+
+        impl fmt::Display for RandomTree {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                try!(writeln!(f, "{}", "digraph x {"));
+                try!(writeln!(f, "{}",
+                         self.nodes.iter()
+                         .zip(0..)
+                         .flat_map(|(ref edges, node_no)| edges.iter().zip(Some(node_no).into_iter().cycle()))
+                         .collect::<Vec<_>>()
+                         .join("\n")
+                        ));
+                writeln!(f, "{}", "}")
+            }
+        }
+
+        impl RandomTree {
+            fn new(nodes_no: usize, max_edges: usize) -> RandomTree {
+                let mut rng = ChaChaRng::new_unseeded();
+                let mut rng2 = ChaChaRng::new_unseeded();
+
+                let mut nodes = (0..nodes_no).collect::<Vec<usize>>();
+                rng.shuffle(&mut nodes[..]);
+
+                assert!(max_edges < nodes_no);
+
+                RandomTree {
+                    nodes: nodes.into_iter().map(|_|
+                        rng.gen_iter::<usize>()
+                        .map(|rand| rand % nodes_no)
+                        .take(rng2.gen_range(1, max_edges - 1))
+                        .collect()
+                    ).collect()
+                }
+            }
+        }
+
+        impl SearchSpace for RandomTree {
+            type State = usize;
+            type Action = usize;
+            type Iterator = IntoIter<(Self::Action, Self::State)>;
+
+            fn expand(&self, state: &Self::State) -> Self::Iterator {
+                //println!("state: {}", state);
+                self.nodes[*state].clone().into_iter()
+                    .enumerate()
+                    .map(|(action, node)|
+                         (action, node)
+                     )
+                    //.inspect(|&(action, node)|
+                        //println!("{} -> {}", action, node)
+                    //)
+                    .collect::<Vec<(usize, usize)>>().into_iter()
+            }
+        }
+
+        let rt = RandomTree::new(24, 6);
+        //println!("{}", rt);
+        assert_eq!(rt.dfs(0, 0).unwrap(), vec![]);
+        assert!(rt.dfs(0, 4).is_none());
+        assert_eq!(rt.dfs(1, 4).unwrap(), vec![3]);
+        assert_eq!(rt.dfs(1, 4).unwrap(), vec![3]);
+        assert_eq!(rt.dfs(6, 13).unwrap(), vec![1, 0, 0, 0, 1, 0, 1, 0, 0]);
     }
 }
