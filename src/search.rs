@@ -24,7 +24,7 @@ pub trait SearchGoal<T> {
 
 impl<T> SearchGoal<T> for T where T: PartialEq {
     fn is_goal(&self, state: &T) -> bool {
-        *self == *state
+        self == state
     }
 }
 
