@@ -87,15 +87,12 @@ pub mod tests {
             type Iterator = IntoIter<(Self::Action, Self::State)>;
 
             fn expand(&self, state: &Self::State) -> Self::Iterator {
-                if *state == 0 {
-                    vec![(Dir::Left, 1), (Dir::Right, 2)].into_iter()
-                } else if *state == 1 {
-                    vec![(Dir::Left, 3), (Dir::Right, 4)].into_iter()
-                } else if *state == 2 {
-                    vec![(Dir::Left, 2)].into_iter()
-                } else {
-                    vec![].into_iter()
-                }
+                match *state {
+                    0 => vec![(Dir::Left, 1), (Dir::Right, 2)],
+                    1 => vec![(Dir::Left, 3), (Dir::Right, 4)],
+                    2 => vec![(Dir::Left, 2)],
+                    _ => vec![]
+                }.into_iter()
             }
         }
 
