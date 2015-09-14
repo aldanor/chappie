@@ -71,11 +71,13 @@ pub trait SearchSpace {
 
 #[cfg(test)]
 pub mod tests {
+    use super::{SearchSpace, SearchGoal};
     use std::vec::IntoIter;
     use rand::chacha::ChaChaRng;
     use rand::Rng;
-    use super::SearchSpace;
     use std::iter::Enumerate;
+    use std::cell::RefCell;
+    use std::collections::HashSet;
 
     struct RandomGraph {
         nodes: Vec<Vec<usize>>
@@ -118,6 +120,31 @@ pub mod tests {
             } else {
                 vec![]
             }.into_iter().enumerate()
+        }
+    }
+
+    struct Observer<T> {
+        goal: T,
+        visited: RefCell<Vec<T>>,
+    }
+
+    impl<T> Observer<T> where T: Clone {
+        pub fn new(goal: T) -> Observer<T> {
+            Observer {
+                goal: goal,
+                visited: RefCell::new(vec![])
+            }
+        }
+
+        pub fn visited(&self) -> Vec<T> {
+            self.visited.borrow().clone()
+        }
+    }
+
+    impl<T> SearchGoal<T> for Observer<T> where T: PartialEq + Clone {
+        fn is_goal(&self, state: &T) -> bool {
+            self.visited.borrow_mut().push(state.clone());
+            self.goal == *state
         }
     }
 
@@ -167,12 +194,22 @@ pub mod tests {
 
         for start in (0..N_NODES) {
             for goal in (0..N_NODES) {
-                if let Some(path) = g.dfs(&start, &goal) {
+                let observer = Observer::new(goal);
+                if let Some(path) = g.dfs(&start, &observer) {
                     let mut state = start;
                     for action in path {
                         state = g.expand(&state).skip(action).next().unwrap().1;
                     }
                     assert_eq!(state, goal);
+                } else {
+                    let visited: HashSet<_> = observer.visited().iter().cloned().collect();
+                    for state in observer.visited() {
+                        assert!(!observer.is_goal(&state));
+                        for (_, next_state) in g.expand(&state) {
+                            assert!(!observer.is_goal(&next_state));
+                            assert!(visited.contains(&next_state));
+                        }
+                    }
                 }
             }
         }
