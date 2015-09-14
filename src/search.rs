@@ -206,7 +206,6 @@ pub mod tests {
                     for state in observer.visited() {
                         assert!(!observer.is_goal(&state));
                         for (_, next_state) in g.expand(&state) {
-                            assert!(!observer.is_goal(&next_state));
                             assert!(visited.contains(&next_state));
                         }
                     }
