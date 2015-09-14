@@ -35,14 +35,14 @@ pub trait SearchSpace {
 
     fn expand(&self, state: &Self::State) -> Self::Iterator;
 
-    fn dfs<G>(&self, start: Self::State, goal: G) -> Option<Vec<Self::Action>>
+    fn dfs<G>(&self, start: &Self::State, goal: &G) -> Option<Vec<Self::Action>>
     where G: SearchGoal<Self::State> {
-        if goal.is_goal(&start) {
+        if goal.is_goal(start) {
             return Some(vec![]);
         }
 
         let mut visited = Visited::new();
-        let mut stack = vec![(self.expand(&start), None)];
+        let mut stack = vec![(self.expand(start), None)];
 
         loop {
             let next = match stack.last_mut() {
@@ -145,14 +145,14 @@ pub mod tests {
 
         let ts = TestSearch;
 
-        assert_eq!(ts.dfs(0, 0).unwrap(), vec![]);
-        assert_eq!(ts.dfs(0, 1).unwrap(), vec![Dir::Left]);
-        assert_eq!(ts.dfs(0, 2).unwrap(), vec![Dir::Right]);
-        assert_eq!(ts.dfs(0, 3).unwrap(), vec![Dir::Left, Dir::Left]);
-        assert_eq!(ts.dfs(0, 4).unwrap(), vec![Dir::Left, Dir::Right]);
-        assert_eq!(ts.dfs(2, 2).unwrap(), vec![]);
-        assert!(ts.dfs(2, 0).is_none());
-        assert!(ts.dfs(5, 0).is_none());
+        assert_eq!(ts.dfs(&0, &0).unwrap(), vec![]);
+        assert_eq!(ts.dfs(&0, &1).unwrap(), vec![Dir::Left]);
+        assert_eq!(ts.dfs(&0, &2).unwrap(), vec![Dir::Right]);
+        assert_eq!(ts.dfs(&0, &3).unwrap(), vec![Dir::Left, Dir::Left]);
+        assert_eq!(ts.dfs(&0, &4).unwrap(), vec![Dir::Left, Dir::Right]);
+        assert_eq!(ts.dfs(&2, &2).unwrap(), vec![]);
+        assert!(ts.dfs(&2, &0).is_none());
+        assert!(ts.dfs(&5, &0).is_none());
     }
 
     #[test]
@@ -162,12 +162,12 @@ pub mod tests {
 
         let g = RandomGraph::new(N_NODES, MAX_EDGES);
 
-        assert!(g.dfs(N_NODES, 0).is_none());
-        assert!(g.dfs(0, N_NODES).is_none());
+        assert!(g.dfs(&N_NODES, &0).is_none());
+        assert!(g.dfs(&0, &N_NODES).is_none());
 
         for start in (0..N_NODES) {
             for goal in (0..N_NODES) {
-                if let Some(path) = g.dfs(start, goal) {
+                if let Some(path) = g.dfs(&start, &goal) {
                     let mut state = start;
                     for action in path {
                         state = g.expand(&state).skip(action).next().unwrap().1;

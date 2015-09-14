@@ -33,5 +33,5 @@ impl SearchSpace for BinaryTree {
 #[bench]
 fn dfs(b: &mut Bencher) {
     let tree = BinaryTree;
-    b.iter(|| { black_box(tree.dfs(0, 2)) });
+    b.iter(|| { black_box(tree.dfs(&0, &2)) });
 }
