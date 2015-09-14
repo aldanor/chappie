@@ -6,6 +6,8 @@ rust:
 - nightly
 script:
 - cd $TRAVIS_BUILD_DIR && cargo build --verbose && cargo test --verbose
+- |
+    [ $TRAVIS_BRANCH != "nightly" ] || cargo bench --verbose
 notifications:
   email:
     on_success: never
