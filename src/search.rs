@@ -184,7 +184,7 @@ pub mod tests {
 
     #[test]
     pub fn test_dfs_random() {
-        const N_NODES: usize = 24;
+        const N_NODES: usize = 48;
         const MAX_EDGES: usize = 6;
 
         let g = RandomGraph::new(N_NODES, MAX_EDGES);
